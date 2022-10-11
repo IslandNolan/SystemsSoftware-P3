@@ -1,19 +1,16 @@
-# SystemsSoftware-P2 - Fall 2022
+# SystemsSoftware-P3 - Fall 2022
 
-## Symbol Table - SIC Assembler Pass 1: 
+## Symbol Table - SIC Assembler Pass 2: 
 
 
 ### Project Description:
-This project records and creates Symbols for Stage 1 of compiling a SIC File.
-Symbols are created, and memory addresses are generated based on the file provided. After Addresses, and the contents of Directive/Opcodes
-have been verified, the Symbol is created, and recorded in a Symbol Table (A Chained HashTable)
+This Project Produces a .lst, and .obj file from a Symbol Table that is created using the previous project.
 
-The Symbols can be inserted in two ways:
- - A Root Element, or-
- - A Chained Element
 
-A root element is an element that is first in any particular table location. It does not rely on a link for its location.
-A Chained Element relies on a separate element. The Chained Element is linked to a root element. An example of this is a LinkedList.
+
+
+
+
 
 There are multiple internal changes done to this project. They are listed below:
 
@@ -24,7 +21,7 @@ There are multiple internal changes done to this project. They are listed below:
 - Removal of the initializeSymbolTable method. This is accomplished with calloc instead.
 - Changes to several pre-defined methods including their return types, and parameters.
 
-<br/>
+
 
 ## Experiences:
 
@@ -46,7 +43,6 @@ Required Dependencies:
 - Cmake
 - G++
 - Glibc
-- Ninja
 
 
 To Compile:

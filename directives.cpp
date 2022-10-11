@@ -5,6 +5,11 @@ enum directives {
 };
 std::string directiveArray[7] = {"ERROR","BYTE","END","RESB","RESW","START","WORD"};
 
+int getByteWordValue(int directiveType, std::string str){
+    //Required for pass2
+    return 0;
+}
+
 int getMemoryAmount(int directiveType, std::string str) {
     switch(directiveType){
         case BYTE: {
@@ -58,6 +63,18 @@ int getDirectiveValue(std::string str){
 
 bool isStartDirective(std::string str) {
     return (getDirectiveValue(str)==5);
+}
+bool isDataDirective(std::string str){
+    //pass2
+    return false;
+}
+bool isEndDirective(std::string str){
+    //pass2
+    return false;
+}
+bool isReserveDirective(std::string str){
+    //pass2
+    return false;
 }
 
 

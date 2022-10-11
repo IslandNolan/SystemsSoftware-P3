@@ -43,6 +43,10 @@ void displayError(int errorType,std::string errorInfo,int line) {
             std::cout << "Word '"+errorInfo+"' is out of Range (-16,777,216 - 16,777,215)" << std::endl;
             break;
         }
+        case UNDEFINED_SYMBOL:{
+            std::cout << "Symbol '"+errorInfo+"' is is undefined" << std::endl;
+            break;
+        }
         default: break;
     }
 }

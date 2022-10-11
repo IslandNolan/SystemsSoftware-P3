@@ -43,8 +43,8 @@ segment* prepareSegments(std::string statement) {
  * @param filename File to parse
  * @param addresses Current Addresses for the instruction
  */
-void performPass1(struct symbol symbolTable[], std::string filename, address* addresses) {
-    cout << "\nSymbol Table Log\n----------------" << std::endl;
+void performPass1(struct symbol symbolTable[], const std::string& filename, address* addresses) {
+    //cout << "\nSymbol Table Log\n----------------" << std::endl;
     std::ifstream ifs(filename);
     if(!ifs.is_open()) { displayError(FILE_NOT_FOUND,filename); exit(1); }
     std::string currentLine;
@@ -89,17 +89,48 @@ void performPass1(struct symbol symbolTable[], std::string filename, address* ad
         }
         addresses->current = toHex(to_string(newValue));
     }
-    std::cout << std::endl;
-    displaySymbolTable(symbolTable);
+    //std::cout << std::endl;
+    //displaySymbolTable(symbolTable);
 
     ifs.close();
 
-
+    /*
     std::cout << "\n\nAssembly Summary - "+filename+"\n----------------\n"
               << setw(20) << "Starting Address: " << addresses->start << endl
               << setw(20) << " Ending Address:  "<< addresses->current << endl
               << setw(20) << " Size (bytes):  " << (stoi(toDec(addresses->current))-stoi(toDec(addresses->start))) << endl;
+    */
+    std::cout << "Finished Pass 1 for SIC file: "+filename << endl;
+}
 
+/**
+ * Perform the SIC Assmenly Pass 2 on the specified file, generates two additional files, filename.lst, and filename.obj
+ * @param symbolTable
+ * @param filename
+ * @param addresses
+ */
+void performPass2(struct symbol symbolTable[],const std::string& filename,address* addresses){
+    //Create files using create file name,
+    //open file for writing
+    //Follow instructions on canvas
+
+    objectFileData objectData = { 0, { 0x0 }, { "\0" }, 0, 0x0, 0, { 0 }, 0, '\0', 0x0 };
+
+
+}
+
+void writeToLstFile(FILE* file, int address, segment* segments, int opcode) {
+    //Pass 2
+}
+
+void writeToObjFile(FILE* file, objectFileData fileData) {
+    //Pass 2
+
+}
+std::string createFiles(const std::string& str,const std::string& ext){
+    //Expects .sic suffix on original str.
+    //Pass 2 Requirement.
+    return "";
 }
 
 int main(int argc, char* argv[]) {
@@ -110,4 +141,5 @@ int main(int argc, char* argv[]) {
     auto* symbolTable = (symbol*) calloc(sizeof(struct symbol),100);
 
     performPass1(symbolTable,argv[1],&addresses);
+    performPass2(symbolTable,argv[1],&addresses);
 }

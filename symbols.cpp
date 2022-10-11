@@ -39,7 +39,6 @@ void displaySymbolTable(struct symbol symbolTable[]) {
     std::cout << "Index  Name      Address\n"
                  "-----  ------    -------" << std::endl;
 
-
     for(int i=0;i<SYMBOL_TABLE_SIZE;i++) {
         displaySymbolLink(symbolTable[i],i);
     }
@@ -74,5 +73,10 @@ void insertSymbol(struct symbol symbolTable[], const std::string& symbolName, co
         }
         symbolTable[instructionHash].next = newSymbol;
     }
-    std::cout << std::left << std::setw(30) << "Inserted Symbol '"+symbolName+"'" << "Index: " << computeHash(symbolName) << std::endl;
+    //std::cout << std::left << std::setw(30) << "Inserted Symbol '"+symbolName+"'" << "Index: " << computeHash(symbolName) << std::endl;
+}
+
+int getSymbolAddress(struct symbol symbolArray[], std::string str) {
+    //Pass 2
+    return 0;
 }
