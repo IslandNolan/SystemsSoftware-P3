@@ -142,7 +142,7 @@ void performPass1(struct symbol symbolTable[], const std::string& filename, addr
             insertSymbol(symbolTable,current->first,addresses->current);
         }
         addresses->current = toHex(to_string(newValue));
-        free(current);
+        delete(current);
     }
     //std::cout << std::endl;
     //displaySymbolTable(symbolTable);
@@ -188,6 +188,11 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
         }
         segment *current = prepareSegments(currentLine);
         std::cout << std::left << std::setw(SEGMENT_SIZE) << current->first << std::left << std::setw(SEGMENT_SIZE) << current->second << std::left << std::setw(SEGMENT_SIZE) << current->third << std::endl;
+
+
+
+        //Requirement so we don't leak memory.
+        delete(current);
     }
 }
 
