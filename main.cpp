@@ -1,6 +1,7 @@
 #include "headers.h"
 
 #define SYMBOL_TABLE_SIZE 100
+#define SEGMENT_SIZE 10
 
 using namespace std;
 
@@ -13,7 +14,8 @@ using namespace std;
  * @return a pointer to a typedef struct segment.
  */
 segment* prepareSegments(std::string statement) {
-    auto* temp = (segment*) malloc(sizeof(segment));
+    auto* temp = new segment();
+
     std::stringstream iss(statement);
     std::string current;
     for(int i=0;i<3;i++){
@@ -35,6 +37,58 @@ segment* prepareSegments(std::string statement) {
         }
     }
     return temp;
+}
+
+void writeToLstFile(std::ofstream& file, int address, segment* segments, int opcode) {
+
+    //Pass 2
+}
+
+void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
+        switch(fileData.recordType){
+            case 'H': {
+                cout << "Header" << endl;
+
+                break;
+            }
+            case 'T':{
+
+
+
+
+                break;
+            }
+            case 'E':{
+
+
+
+                break;
+            }
+            case 'M':{
+
+
+
+
+                //reserved for extra credit modification record.
+                break;
+            }
+        }
+
+        oss << "Hello, Testing file read/write" << std::endl;
+
+
+    //Pass 2
+
+}
+
+std::string createFiles(const std::string& filename,const std::string& ext){
+    string modified = filename;
+    modified.erase(filename.size()-4,4);
+    modified.append(ext);
+    remove(modified.c_str());
+    ofstream oss(modified,ios_base::app);
+    if(oss.good()) { return modified; }
+    else return "NULL";
 }
 
 /**
@@ -88,12 +142,11 @@ void performPass1(struct symbol symbolTable[], const std::string& filename, addr
             insertSymbol(symbolTable,current->first,addresses->current);
         }
         addresses->current = toHex(to_string(newValue));
+        free(current);
     }
     //std::cout << std::endl;
     //displaySymbolTable(symbolTable);
-
     ifs.close();
-
     /*
     std::cout << "\n\nAssembly Summary - "+filename+"\n----------------\n"
               << setw(20) << "Starting Address: " << addresses->start << endl
@@ -110,27 +163,32 @@ void performPass1(struct symbol symbolTable[], const std::string& filename, addr
  * @param addresses
  */
 void performPass2(struct symbol symbolTable[],const std::string& filename,address* addresses){
-    //Create files using create file name,
-    //open file for writing
-    //Follow instructions on canvas
 
+    std::cout << "Pass 2" << std::endl;
     objectFileData objectData = { 0, { 0x0 }, { "\0" }, 0, 0x0, 0, { 0 }, 0, '\0', 0x0 };
 
+    //Create both .lst, and .obj files.
+    ofstream lstFile(createFiles(filename,".lst"));
+    ofstream objFile(createFiles(filename,".obj"));
+    ifstream ifs(filename);
 
-}
+    if(!lstFile.is_open() || !objFile.is_open()) {
+        cout << "Failed to create one or both output files.. " << std::endl;
+        exit(1);
+    }
 
-void writeToLstFile(FILE* file, int address, segment* segments, int opcode) {
-    //Pass 2
-}
-
-void writeToObjFile(FILE* file, objectFileData fileData) {
-    //Pass 2
-
-}
-std::string createFiles(const std::string& str,const std::string& ext){
-    //Expects .sic suffix on original str.
-    //Pass 2 Requirement.
-    return "";
+    std::string currentLine;
+    int lineNumber;
+    while(getline(ifs,currentLine)) {
+        lineNumber++;
+        if (currentLine[0] == '#') { continue; }
+        if (currentLine[0] < 32) {
+            displayError(BLANK_RECORD, "", lineNumber);
+            exit(1);
+        }
+        segment *current = prepareSegments(currentLine);
+        std::cout << std::left << std::setw(SEGMENT_SIZE) << current->first << std::left << std::setw(SEGMENT_SIZE) << current->second << std::left << std::setw(SEGMENT_SIZE) << current->third << std::endl;
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -138,8 +196,10 @@ int main(int argc, char* argv[]) {
     if(argc<2) { displayError(MISSING_COMMAND_LINE_ARGUMENTS,std::string("Missing Args"),-1); exit(1); }
     address addresses = { "", "", "" };
 
+    //Stored in Stack memory, but this is ok because we don't need to reallocate it or anything.
     auto* symbolTable = (symbol*) calloc(sizeof(struct symbol),100);
 
     performPass1(symbolTable,argv[1],&addresses);
+
     performPass2(symbolTable,argv[1],&addresses);
 }

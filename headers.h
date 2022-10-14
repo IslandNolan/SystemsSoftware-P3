@@ -38,7 +38,7 @@ typedef struct recordEntry {
 typedef struct objectFileData {
     int modificationCount; // Used for extra credit only
     int modificationEntries[60]; // Used for extra credit only
-    char programName[NAME_SIZE]; // Used for H and M records only
+    std::string programName; // Used for H and M records only
     int programSize; // Used for H record only
     int recordAddress; // Used for T records only
     int recordByteCount; // Used for T records only
@@ -54,9 +54,9 @@ bool isDirective(std::string str);
 int getDirectiveValue(std::string str);
 bool isStartDirective(std::string str);
 int getByteWordValue(int directiveType, std::string str);
-bool isDataDirective(int directiveType);
-bool isEndDirective(int directiveType);
-bool isReserveDirective(int directiveType);
+bool isDataDirective(std::string str);
+bool isEndDirective(std::string str);
+bool isReserveDirective(std::string str);
 
 // errors.c functions
 void displayError(int errorType, std::string errorInfo,int lineNumber);
