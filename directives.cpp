@@ -62,19 +62,17 @@ int getDirectiveValue(std::string str){
 }
 
 bool isStartDirective(std::string str) {
-    return (getDirectiveValue(str)==5);
+    return (getDirectiveValue(str)==START);
 }
 bool isDataDirective(std::string str){
-    //pass2
-    return false;
+    return (getDirectiveValue(str)==BYTE || getDirectiveValue(str)==WORD);
 }
 bool isEndDirective(std::string str){
-    //pass2
-    return false;
+    return getDirectiveValue(str)==END;
+
 }
 bool isReserveDirective(std::string str){
-    //pass2
-    return false;
+    return (getDirectiveValue(str)==RESB || getDirectiveValue(str)==RESW);
 }
 
 

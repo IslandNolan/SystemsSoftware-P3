@@ -40,12 +40,12 @@ typedef struct objectFileData {
     int modificationEntries[60]; // Used for extra credit only
     std::string programName; // Used for H and M records only
     int programSize; // Used for H record only
-    int recordAddress; // Used for T records only
+    std::string recordAddress; // Used for T records only
     int recordByteCount; // Used for T records only
     recordEntry recordEntries[60]; // Used to store T record data
     int recordEntryCount; // Used for T records only
     char recordType; // H, T, E or M
-    int startAddress; // Used for H and E records only
+    std::string startAddress; // Used for H and E records only
 } objectFileData;
 
 // directives.c functions

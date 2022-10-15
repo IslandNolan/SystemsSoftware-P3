@@ -47,7 +47,12 @@ void writeToLstFile(std::ofstream& file, int address, segment* segments, int opc
 void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
         switch(fileData.recordType){
             case 'H': {
-                cout << "Header" << endl;
+                //generate the header here.
+
+
+
+
+                cout << "Header= " << endl;
 
                 break;
             }
@@ -74,21 +79,36 @@ void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
             }
         }
 
-        oss << "Hello, Testing file read/write" << std::endl;
+
 
 
     //Pass 2
 
 }
 
-std::string createFiles(const std::string& filename,const std::string& ext){
+void resetObjectFileData(objectFileData* ofd,address* addresses){
+    ofd->recordAddress = addresses->current;
+    ofd->recordEntryCount=0;
+    ofd->recordByteCount=0;
+    cout << "RESET OBJ" << std::endl;
+}
+
+std::string createFile(const std::string& filename,const std::string& ext){
     string modified = filename;
     modified.erase(filename.size()-4,4);
     modified.append(ext);
+
+    //Delete old files, and just open new ones when the oss is created.
     remove(modified.c_str());
-    ofstream oss(modified,ios_base::app);
-    if(oss.good()) { return modified; }
-    else return "NULL";
+
+    //Use constructor to create oss for the file, then delete it so no mem leaks.
+    auto* oss = new ofstream(modified,ios_base::app);
+    if(oss->good()) {
+        delete(oss);
+        return modified;
+    }
+    //an error has occurred if we reach here.
+    return "";
 }
 
 /**
@@ -164,18 +184,16 @@ void performPass1(struct symbol symbolTable[], const std::string& filename, addr
  */
 void performPass2(struct symbol symbolTable[],const std::string& filename,address* addresses){
 
-    std::cout << "Pass 2" << std::endl;
-    objectFileData objectData = { 0, { 0x0 }, { "\0" }, 0, 0x0, 0, { 0 }, 0, '\0', 0x0 };
+    std::cout << "Begin Pass 2--" << std::endl;
+    objectFileData objectData = { 0, { 0x0 }, { "" }, 0, "0x0", 0, { 0 }, 0, '\0', "0x0" };
 
     //Create both .lst, and .obj files.
-    ofstream lstFile(createFiles(filename,".lst"));
-    ofstream objFile(createFiles(filename,".obj"));
+    ofstream lstFile(createFile(filename,".lst"));
+    ofstream objFile(createFile(filename,".obj"));
     ifstream ifs(filename);
 
-    if(!lstFile.is_open() || !objFile.is_open()) {
-        cout << "Failed to create one or both output files.. " << std::endl;
-        exit(1);
-    }
+    if(!ifs.is_open()) { displayError(FILE_NOT_FOUND,filename,-1); exit(1); }
+    //Instructions say it's not necessary to check for open failures for .lst, and .obj files.
 
     std::string currentLine;
     int lineNumber;
@@ -187,8 +205,47 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
             exit(1);
         }
         segment *current = prepareSegments(currentLine);
-        std::cout << std::left << std::setw(SEGMENT_SIZE) << current->first << std::left << std::setw(SEGMENT_SIZE) << current->second << std::left << std::setw(SEGMENT_SIZE) << current->third << std::endl;
+        if(isDirective(current->second)){
+            if(isStartDirective(current->second)){
+                objectData.recordType='H';
+                objectData.programName=current->first;
+                objectData.startAddress=addresses->start;
+                objectData.recordAddress=addresses->start;
+                objectData.programSize=(stoi(addresses->current)-stoi(addresses->start));
+                addresses->current = addresses->start;
+                writeToObjFile(objFile,objectData);
+                //writeToLstFile(lstFile,objectData);
+            }
+            else if(isEndDirective(current->second)){
+                if(objectData.recordByteCount>0) {
+                    writeToObjFile(objFile,objectData);
+                    resetObjectFileData(&objectData,addresses);
+                }
+                objectData.recordType='E';
+                writeToObjFile(objFile,objectData);
+                //writeToLstFile()
+            }
+            else if(isReserveDirective(current->second)){
+                if(objectData.recordByteCount>0){
+                    writeToObjFile(objFile,objectData);
+                    resetObjectFileData(&objectData,addresses);
+                }
+                //writeToLstFile()
+                addresses->increment = toHex(to_string(getMemoryAmount(getDirectiveValue(current->second),current->third)));
+                objectData.recordAddress = toHex((to_string(stoi(toDec(objectData.recordAddress))+stoi(toDec(addresses->increment)))));
 
+            }
+            else {
+                //Must be data directive.
+                addresses->increment = toHex(to_string(getMemoryAmount(getDirectiveValue(current->second),current->third)));
+                //DO this later
+
+
+
+
+
+            }
+        }
 
 
         //Requirement so we don't leak memory.
