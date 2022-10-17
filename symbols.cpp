@@ -18,12 +18,14 @@ std::string toDec(std::string hexVal){
 }
 std::string toHex(std::string decVal){
     std::stringstream ss;
-    ss << "0x" << std::hex << stoi(decVal);
-    return ss.str();
+    ss << std::hex << stoi(decVal);
+    std::string result = ss.str();
+    std::transform(result.begin(), result.end(),result.begin(), ::toupper);
+    return result;
 }
 void printSymbol(struct symbol s, std::string index){
     if(s.name.empty()) { return; }
-    std::cout << std::left << std::setw(7) << index << std::left << std::setw(10) << s.name << std::right << std::setw(6) << s.address << std::endl;
+    std::cout << std::left << std::setw(7) << index << std::left << std::setw(10) << s.name << std::right << std::setw(6) << "0x"+s.address << std::endl;
 }
 void displaySymbolLink(struct symbol s, int index){
     printSymbol(s,std::to_string(index));

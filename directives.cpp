@@ -5,11 +5,32 @@ enum directives {
 };
 std::string directiveArray[7] = {"ERROR","BYTE","END","RESB","RESW","START","WORD"};
 
-int getByteWordValue(int directiveType, std::string str){
-    //Required for pass2
-    return 0;
+/** Return as Hexidecimal */
+std::string getByteWordValue(int directiveType, std::string str){
+    if(directiveType==BYTE){
+        if(str.find('C')!=std::string::npos){
+            std::stringstream res;
+            str.erase(0,2);
+            str.erase(str.size()-1,1);
+            for(char c : str){
+                std::string temp = toHex(std::to_string(c));
+                res << temp;
+            }
+            return res.str();
+        }
+        if(str.find('X')!=std::string::npos){
+            str.erase(0,2);
+            str.erase(str.size()-1,1);
+            return str;
+        }
+    }
+    else if(directiveType=WORD){
+        return toHex(str);
+    }
+    else return 0;
 }
 
+/** Return as Decimal */
 int getMemoryAmount(int directiveType, std::string str) {
     switch(directiveType){
         case BYTE: {
@@ -43,8 +64,6 @@ int getMemoryAmount(int directiveType, std::string str) {
             } else return 3;
         }
     }
-
-
     return 0;
 }
 

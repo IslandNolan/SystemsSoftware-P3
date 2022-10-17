@@ -4,8 +4,15 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <algorithm>
 
 #define NAME_SIZE 7
+#define BLANK_INSTRUCTION 0x000000
+#define OPCODE_MULTIPLIER 0x10000
+#define OUTPUT_BUF_SIZE 70
+#define RSUB_INSTRUCTION 0x4C0000
+#define X_MULTIPLER 0x8000
+#define MAX_RECORD_BYTE_COUNT 30
 
 enum errors {
 	BLANK_RECORD, DUPLICATE, FILE_NOT_FOUND, ILLEGAL_OPCODE_DIRECTIVE, ILLEGAL_SYMBOL,
@@ -31,15 +38,15 @@ typedef struct symbol {
 } symbol;
 
 typedef struct recordEntry {
-    int numBytes;
-    int value;
+    std::string numBytes;
+    std::string value;
 } recordEntry;
 
 typedef struct objectFileData {
     int modificationCount; // Used for extra credit only
     int modificationEntries[60]; // Used for extra credit only
     std::string programName; // Used for H and M records only
-    int programSize; // Used for H record only
+    std::string programSize; // Used for H record only
     std::string recordAddress; // Used for T records only
     int recordByteCount; // Used for T records only
     recordEntry recordEntries[60]; // Used to store T record data
@@ -53,7 +60,7 @@ int getMemoryAmount(int directiveType, std::string string);
 bool isDirective(std::string str);
 int getDirectiveValue(std::string str);
 bool isStartDirective(std::string str);
-int getByteWordValue(int directiveType, std::string str);
+std::string getByteWordValue(int directiveType, std::string str);
 bool isDataDirective(std::string str);
 bool isEndDirective(std::string str);
 bool isReserveDirective(std::string str);

@@ -39,34 +39,37 @@ segment* prepareSegments(std::string statement) {
     return temp;
 }
 
-void writeToLstFile(std::ofstream& file, int address, segment* segments, int opcode) {
+void writeToLstFile(std::ofstream& file, const std::string& address, segment* segments, string opcode) {
+
+
 
     //Pass 2
 }
 
 void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
+        stringstream lineToWrite;
         switch(fileData.recordType){
             case 'H': {
-                //generate the header here.
 
-
-
-
-                cout << "Header= " << endl;
-
+                lineToWrite << "H";
+                lineToWrite << setw(6) << std::left << fileData.programName;
+                lineToWrite << setw(6) << std::right << setfill('0') << fileData.startAddress;
+                lineToWrite << setw(6) << std::right << setfill('0') << fileData.programSize;
+                oss << lineToWrite.str() << std::endl;
                 break;
             }
             case 'T':{
-
-
-
-
+                lineToWrite << "T";
+                lineToWrite << setw(6) <<  std::right << setfill('0') << fileData.recordAddress;
+                lineToWrite << setw(6) << std::right<< setfill('0') << fileData.recordByteCount;
+                oss << lineToWrite.str() << std::endl;
                 break;
             }
             case 'E':{
-
-
-
+                lineToWrite << "E";
+                lineToWrite << setw(6) << setfill('0') << std::right  << fileData.startAddress << std::endl;
+                oss << lineToWrite.str() << endl;
+                std::cout << lineToWrite.str() << std::endl;
                 break;
             }
             case 'M':{
@@ -104,6 +107,7 @@ std::string createFile(const std::string& filename,const std::string& ext){
     //Use constructor to create oss for the file, then delete it so no mem leaks.
     auto* oss = new ofstream(modified,ios_base::app);
     if(oss->good()) {
+        oss->close();
         delete(oss);
         return modified;
     }
@@ -138,8 +142,8 @@ void performPass1(struct symbol symbolTable[], const std::string& filename, addr
         }
         else if(isDirective(current->second)) {
             if(isStartDirective(current->second)){
-                addresses->start = "0x"+current->third;
-                addresses->current = "0x"+current->third;
+                addresses->start = current->third;
+                addresses->current = current->third;
                 continue;
             }
             else {
@@ -185,7 +189,7 @@ void performPass1(struct symbol symbolTable[], const std::string& filename, addr
 void performPass2(struct symbol symbolTable[],const std::string& filename,address* addresses){
 
     std::cout << "Begin Pass 2--" << std::endl;
-    objectFileData objectData = { 0, { 0x0 }, { "" }, 0, "0x0", 0, { 0 }, 0, '\0', "0x0" };
+    objectFileData objectData = { 0, { 0x0 }, "", "0", "0x0", 0, {  }, 0, ' ', "0x0" };
 
     //Create both .lst, and .obj files.
     ofstream lstFile(createFile(filename,".lst"));
@@ -207,11 +211,12 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
         segment *current = prepareSegments(currentLine);
         if(isDirective(current->second)){
             if(isStartDirective(current->second)){
+                //Everything here is stored as a string hex.
                 objectData.recordType='H';
                 objectData.programName=current->first;
                 objectData.startAddress=addresses->start;
                 objectData.recordAddress=addresses->start;
-                objectData.programSize=(stoi(addresses->current)-stoi(addresses->start));
+                objectData.programSize = toHex(to_string(stoi(toDec(addresses->current))-stoi(toDec(addresses->start))));
                 addresses->current = addresses->start;
                 writeToObjFile(objFile,objectData);
                 //writeToLstFile(lstFile,objectData);
@@ -237,13 +242,19 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
             }
             else {
                 //Must be data directive.
+                objectData.recordType='T';
                 addresses->increment = toHex(to_string(getMemoryAmount(getDirectiveValue(current->second),current->third)));
-                //DO this later
-
-
-
-
-
+                if(MAX_RECORD_BYTE_COUNT-stoi(toDec(addresses->increment))<objectData.recordByteCount){
+                    //Dump because not enough room
+                    writeToObjFile(objFile,objectData);
+                    resetObjectFileData(&objectData,addresses);
+                }
+                string wordValue = getByteWordValue(getDirectiveValue(current->second),current->third);
+                struct recordEntry entry = recordEntry { addresses->increment,wordValue };
+                objectData.recordEntryCount++;
+                objectData.recordEntries[objectData.recordEntryCount] = entry;
+                objectData.recordByteCount+=stoi(toDec(addresses->increment));
+                //writeToLstFile(lstFile,addresses->current,current,wordValue);
             }
         }
 
@@ -258,7 +269,8 @@ int main(int argc, char* argv[]) {
     if(argc<2) { displayError(MISSING_COMMAND_LINE_ARGUMENTS,std::string("Missing Args"),-1); exit(1); }
     address addresses = { "", "", "" };
 
-    //Stored in Stack memory, but this is ok because we don't need to reallocate it or anything.
+
+
     auto* symbolTable = (symbol*) calloc(sizeof(struct symbol),100);
 
     performPass1(symbolTable,argv[1],&addresses);
