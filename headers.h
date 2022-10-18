@@ -20,9 +20,9 @@ enum errors {
 };
 
 typedef struct address {
-	std::string start;
-	std::string current;
-	std::string increment;
+	int start;
+	int current;
+	int increment;
 } address;
 
 typedef struct segment {
@@ -32,8 +32,8 @@ typedef struct segment {
 } segment;
 
 typedef struct symbol {
-	std::string name="";
-	std::string address="";
+	std::string name;
+	int address=0x0;
     struct symbol* next=nullptr;
 } symbol;
 
@@ -46,13 +46,13 @@ typedef struct objectFileData {
     int modificationCount; // Used for extra credit only
     int modificationEntries[60]; // Used for extra credit only
     std::string programName; // Used for H and M records only
-    std::string programSize; // Used for H record only
-    std::string recordAddress; // Used for T records only
+    int programSize; // Used for H record only
+    int recordAddress; // Used for T records only
     int recordByteCount; // Used for T records only
     recordEntry recordEntries[60]; // Used to store T record data
     int recordEntryCount; // Used for T records only
     char recordType; // H, T, E or M
-    std::string startAddress; // Used for H and E records only
+    int startAddress; // Used for H and E records only
 } objectFileData;
 
 // directives.c functions
@@ -77,7 +77,7 @@ bool isOpcode(std::string string);
 int computeHash(std::string str);
 void checkDuplicates(struct symbol symbolTable[],struct segment* current);
 void displaySymbolTable(struct symbol symbolTable[]);
-void insertSymbol(struct symbol symbolTable[], const std::string& symbolName, const std::string& symbolAddress);
+void insertSymbol(struct symbol symbolTable[], const std::string& symbolName, int symbolAddress);
 int getSymbolAddress(struct symbol symbolArray[], std::string str);
 std::string toHex(std::string decVal);
 std::string toDec(std::string hexVal);

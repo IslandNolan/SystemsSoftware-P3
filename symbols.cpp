@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <iosfwd>
 #include "headers.h"
 
 #define SYMBOL_TABLE_SIZE 100
@@ -9,23 +11,13 @@ int computeHash(std::string symbolName) {
     }
     return sum%SYMBOL_TABLE_SIZE;
 }
-std::string toDec(std::string hexVal){
-    int value;
-    std::stringstream ss;
-    ss << std::hex << hexVal;
-    ss >> value;
-    return std::to_string(value);
-}
-std::string toHex(std::string decVal){
-    std::stringstream ss;
-    ss << std::hex << stoi(decVal);
-    std::string result = ss.str();
-    std::transform(result.begin(), result.end(),result.begin(), ::toupper);
-    return result;
-}
 void printSymbol(struct symbol s, std::string index){
     if(s.name.empty()) { return; }
-    std::cout << std::left << std::setw(7) << index << std::left << std::setw(10) << s.name << std::right << std::setw(6) << "0x"+s.address << std::endl;
+    std::stringstream ss;
+    ss << std::hex << s.address;
+    std::string adFormatted = ss.str();
+    std::transform(adFormatted.begin(),adFormatted.end(),adFormatted.begin(),toupper);
+    std::cout << std::left << std::setw(7) << index << std::left << std::setw(10) << s.name << std::right << std::setw(6) << " 0x"+adFormatted << std::resetiosflags(std::ios::showbase) << std::endl;
 }
 void displaySymbolLink(struct symbol s, int index){
     printSymbol(s,std::to_string(index));
@@ -40,6 +32,7 @@ void displaySymbolTable(struct symbol symbolTable[]) {
                  "---------------------" << std::endl;
     std::cout << "Index  Name      Address\n"
                  "-----  ------    -------" << std::endl;
+
 
     for(int i=0;i<SYMBOL_TABLE_SIZE;i++) {
         displaySymbolLink(symbolTable[i],i);
@@ -60,7 +53,7 @@ void checkDuplicates(struct symbol* symbolTable,struct segment* current){
     }
 }
 
-void insertSymbol(struct symbol symbolTable[], const std::string& symbolName, const std::string& symbolAddress) {
+void insertSymbol(struct symbol symbolTable[], const std::string& symbolName, int symbolAddress) {
     int instructionHash = computeHash(symbolName);
     auto* newSymbol = (symbol*) malloc(sizeof(struct segment));
     newSymbol->name = symbolName;
@@ -75,10 +68,5 @@ void insertSymbol(struct symbol symbolTable[], const std::string& symbolName, co
         }
         symbolTable[instructionHash].next = newSymbol;
     }
-    //std::cout << std::left << std::setw(30) << "Inserted Symbol '"+symbolName+"'" << "Index: " << computeHash(symbolName) << std::endl;
-}
-
-int getSymbolAddress(struct symbol symbolArray[], std::string str) {
-    //Pass 2
-    return 0;
+    std::cout << std::left << std::setw(30) << "Inserted Symbol '"+symbolName+"'" << "Index: " << stoi(std::to_string(instructionHash),nullptr,10) << std::resetiosflags(std::ios::showbase) << std::endl;
 }

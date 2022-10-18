@@ -50,7 +50,6 @@ void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
         stringstream lineToWrite;
         switch(fileData.recordType){
             case 'H': {
-
                 lineToWrite << "H";
                 lineToWrite << setw(6) << std::left << fileData.programName;
                 lineToWrite << setw(6) << std::right << setfill('0') << fileData.startAddress;
@@ -73,17 +72,10 @@ void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
                 break;
             }
             case 'M':{
-
-
-
-
                 //reserved for extra credit modification record.
                 break;
             }
         }
-
-
-
 
     //Pass 2
 
@@ -121,8 +113,8 @@ std::string createFile(const std::string& filename,const std::string& ext){
  * @param filename File to parse
  * @param addresses Current Addresses for the instruction
  */
-void performPass1(struct symbol symbolTable[], const std::string& filename, address* addresses) {
-    //cout << "\nSymbol Table Log\n----------------" << std::endl;
+void performPass1(struct symbol symbolTable[], std::string filename, address* addresses) {
+    cout << "\nSymbol Table Log\n----------------" << std::endl;
     std::ifstream ifs(filename);
     if(!ifs.is_open()) { displayError(FILE_NOT_FOUND,filename); exit(1); }
     std::string currentLine;
@@ -142,42 +134,41 @@ void performPass1(struct symbol symbolTable[], const std::string& filename, addr
         }
         else if(isDirective(current->second)) {
             if(isStartDirective(current->second)){
-                addresses->start = current->third;
-                addresses->current = current->third;
+                addresses->start = std::strtoull(("0x"+current->third).c_str(),nullptr,16);
+                addresses->current = std::strtoull(("0x"+current->third).c_str(),nullptr,16);
                 continue;
             }
             else {
-                int numBytes = getMemoryAmount(getDirectiveValue(current->second),current->third);
-                addresses->increment = toHex(to_string(numBytes));
+                addresses->increment = getMemoryAmount(getDirectiveValue(current->second),current->third);
             }
         }
         else if(isOpcode(current->second)) {
-            addresses->increment = toHex(to_string(3));
+            addresses->increment = 0x3;
         }
         else{
             displayError(ILLEGAL_OPCODE_DIRECTIVE,current->second,lineNumber);
             exit(1);
         }
-        int newValue = (stoi(toDec(addresses->current)) + stoi(toDec(addresses->increment)));
-        if(newValue> stoi(toDec("0x8000"))) { displayError(OUT_OF_MEMORY, toHex(to_string(newValue)),lineNumber); exit(1); }
+        int newValue = addresses->current + addresses->increment;
+        if(newValue > 0x8000) { displayError(OUT_OF_MEMORY, to_string(newValue),lineNumber); exit(1); }
 
         if(!current->first.empty()) {
             checkDuplicates(symbolTable,current);
             insertSymbol(symbolTable,current->first,addresses->current);
         }
-        addresses->current = toHex(to_string(newValue));
+        addresses->current = newValue;
         delete(current);
     }
-    //std::cout << std::endl;
-    //displaySymbolTable(symbolTable);
+    std::cout << std::endl;
+    displaySymbolTable(symbolTable);
+
     ifs.close();
-    /*
+
     std::cout << "\n\nAssembly Summary - "+filename+"\n----------------\n"
-              << setw(20) << "Starting Address: " << addresses->start << endl
-              << setw(20) << " Ending Address:  "<< addresses->current << endl
-              << setw(20) << " Size (bytes):  " << (stoi(toDec(addresses->current))-stoi(toDec(addresses->start))) << endl;
-    */
-    std::cout << "Finished Pass 1 for SIC file: "+filename << endl;
+              << setw(20) << "Starting Address: " << std::hex << addresses->start << std::dec << endl
+              << setw(20) << " Ending Address:  "<< std::hex << addresses->current << std::dec << endl
+              << setw(20) << " Size (bytes):  " << addresses->current-addresses->start << std::resetiosflags(std::ios::showbase) << std::endl;
+
 }
 
 /**
@@ -186,10 +177,11 @@ void performPass1(struct symbol symbolTable[], const std::string& filename, addr
  * @param filename
  * @param addresses
  */
+ /*
 void performPass2(struct symbol symbolTable[],const std::string& filename,address* addresses){
 
     std::cout << "Begin Pass 2--" << std::endl;
-    objectFileData objectData = { 0, { 0x0 }, "", "0", "0x0", 0, {  }, 0, ' ', "0x0" };
+    objectFileData objectData = { 0, { 0x0 }, "", 0, 0x0, 0, {  }, 0, ' ', 0x0 };
 
     //Create both .lst, and .obj files.
     ofstream lstFile(createFile(filename,".lst"));
@@ -263,11 +255,12 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
         delete(current);
     }
 }
+  */
 
 int main(int argc, char* argv[]) {
 
     if(argc<2) { displayError(MISSING_COMMAND_LINE_ARGUMENTS,std::string("Missing Args"),-1); exit(1); }
-    address addresses = { "", "", "" };
+    address addresses = { 0x0, 0x0, 0x0 };
 
 
 
@@ -275,5 +268,5 @@ int main(int argc, char* argv[]) {
 
     performPass1(symbolTable,argv[1],&addresses);
 
-    performPass2(symbolTable,argv[1],&addresses);
+    //performPass2(symbolTable,argv[1],&addresses);
 }
