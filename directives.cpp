@@ -5,6 +5,29 @@ enum directives {
 };
 std::string directiveArray[7] = {"ERROR","BYTE","END","RESB","RESW","START","WORD"};
 
+int getByteWordValue(int directiveType, std::string str){
+    if(directiveType==BYTE){
+        if(str.find('C')!=std::string::npos){
+            std::stringstream res;
+            str.erase(0,2);
+            str.erase(str.size()-1,1);
+            for(char c : str){
+                res << std::hex << (int) c;
+            }
+            return std::strtoull(("0x"+res.str()).c_str(),nullptr,16);
+        }
+        if(str.find('X')!=std::string::npos){
+            str.erase(0,2);
+            str.erase(str.size()-1,1);
+            return std::strtoull(("0x"+str).c_str(),nullptr,16);
+        }
+    }
+    else if(directiveType=WORD){
+        return std::strtoull(str.c_str(),nullptr,10);
+    }
+    return 0;
+}
+
 int getMemoryAmount(int directiveType, std::string str) {
     //Return as int value formatted as a hex.
     switch(directiveType){
@@ -58,7 +81,15 @@ int getDirectiveValue(std::string str){
 }
 
 bool isStartDirective(std::string str) {
-    return (getDirectiveValue(str)==5);
+    return (getDirectiveValue(str)==START);
 }
+bool isDataDirective(std::string str){
+    return (getDirectiveValue(str)==BYTE || getDirectiveValue(str)==WORD);
+}
+bool isEndDirective(std::string str){
+    return getDirectiveValue(str)==END;
 
-
+}
+bool isReserveDirective(std::string str){
+    return (getDirectiveValue(str)==RESB || getDirectiveValue(str)==RESW);
+}

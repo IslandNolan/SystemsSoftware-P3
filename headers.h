@@ -38,8 +38,8 @@ typedef struct symbol {
 } symbol;
 
 typedef struct recordEntry {
-    std::string numBytes;
-    std::string value;
+    int numBytes;
+    int value;
 } recordEntry;
 
 typedef struct objectFileData {
@@ -60,7 +60,7 @@ int getMemoryAmount(int directiveType, std::string string);
 bool isDirective(std::string str);
 int getDirectiveValue(std::string str);
 bool isStartDirective(std::string str);
-std::string getByteWordValue(int directiveType, std::string str);
+int getByteWordValue(int directiveType, std::string str);
 bool isDataDirective(std::string str);
 bool isEndDirective(std::string str);
 bool isReserveDirective(std::string str);
@@ -79,6 +79,4 @@ void checkDuplicates(struct symbol symbolTable[],struct segment* current);
 void displaySymbolTable(struct symbol symbolTable[]);
 void insertSymbol(struct symbol symbolTable[], const std::string& symbolName, int symbolAddress);
 int getSymbolAddress(struct symbol symbolArray[], std::string str);
-std::string toHex(std::string decVal);
-std::string toDec(std::string hexVal);
 

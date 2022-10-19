@@ -52,23 +52,25 @@ void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
             case 'H': {
                 lineToWrite << "H";
                 lineToWrite << setw(6) << std::left << fileData.programName;
-                lineToWrite << setw(6) << std::right << setfill('0') << fileData.startAddress;
-                lineToWrite << setw(6) << std::right << setfill('0') << fileData.programSize;
+                lineToWrite << setw(6) << std::right << setfill('0') << std::hex << fileData.startAddress;
+                lineToWrite << setw(6) << std::right << setfill('0') << std::hex << fileData.programSize;
                 oss << lineToWrite.str() << std::endl;
+                std::cout << std::resetiosflags(std::ios::showbase);
                 break;
             }
             case 'T':{
                 lineToWrite << "T";
-                lineToWrite << setw(6) <<  std::right << setfill('0') << fileData.recordAddress;
-                lineToWrite << setw(6) << std::right<< setfill('0') << fileData.recordByteCount;
+                lineToWrite << setw(6) <<  std::right << setfill('0') << std::hex << fileData.recordAddress;
+                lineToWrite << setw(6) << std::right<< setfill('0') << std::hex << fileData.recordByteCount;
                 oss << lineToWrite.str() << std::endl;
+                std::cout << std::resetiosflags(std::ios::showbase);
                 break;
             }
             case 'E':{
                 lineToWrite << "E";
-                lineToWrite << setw(6) << setfill('0') << std::right  << fileData.startAddress << std::endl;
+                lineToWrite << setw(6) << setfill('0') << std::right  << std::hex << fileData.startAddress << std::endl;
                 oss << lineToWrite.str() << endl;
-                std::cout << lineToWrite.str() << std::endl;
+                std::cout << std::resetiosflags(std::ios::showbase);
                 break;
             }
             case 'M':{
@@ -76,7 +78,6 @@ void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
                 break;
             }
         }
-
     //Pass 2
 
 }
@@ -177,7 +178,6 @@ void performPass1(struct symbol symbolTable[], std::string filename, address* ad
  * @param filename
  * @param addresses
  */
- /*
 void performPass2(struct symbol symbolTable[],const std::string& filename,address* addresses){
 
     std::cout << "Begin Pass 2--" << std::endl;
@@ -192,7 +192,7 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
     //Instructions say it's not necessary to check for open failures for .lst, and .obj files.
 
     std::string currentLine;
-    int lineNumber;
+    int lineNumber=0;
     while(getline(ifs,currentLine)) {
         lineNumber++;
         if (currentLine[0] == '#') { continue; }
@@ -208,7 +208,7 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
                 objectData.programName=current->first;
                 objectData.startAddress=addresses->start;
                 objectData.recordAddress=addresses->start;
-                objectData.programSize = toHex(to_string(stoi(toDec(addresses->current))-stoi(toDec(addresses->start))));
+                objectData.programSize = addresses->current-addresses->start;
                 addresses->current = addresses->start;
                 writeToObjFile(objFile,objectData);
                 //writeToLstFile(lstFile,objectData);
@@ -227,46 +227,78 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
                     writeToObjFile(objFile,objectData);
                     resetObjectFileData(&objectData,addresses);
                 }
+                objectData.recordType='T';
                 //writeToLstFile()
-                addresses->increment = toHex(to_string(getMemoryAmount(getDirectiveValue(current->second),current->third)));
-                objectData.recordAddress = toHex((to_string(stoi(toDec(objectData.recordAddress))+stoi(toDec(addresses->increment)))));
+                addresses->increment = getMemoryAmount(getDirectiveValue(current->second),current->third);
+                objectData.recordAddress+=addresses->increment;
 
             }
             else {
-                //Must be data directive.
-                objectData.recordType='T';
-                addresses->increment = toHex(to_string(getMemoryAmount(getDirectiveValue(current->second),current->third)));
-                if(MAX_RECORD_BYTE_COUNT-stoi(toDec(addresses->increment))<objectData.recordByteCount){
+                //Must be data directive
+                addresses->increment = getMemoryAmount(getDirectiveValue(current->second),current->third);
+                if(MAX_RECORD_BYTE_COUNT-addresses->increment<objectData.recordByteCount){
                     //Dump because not enough room
                     writeToObjFile(objFile,objectData);
                     resetObjectFileData(&objectData,addresses);
                 }
-                string wordValue = getByteWordValue(getDirectiveValue(current->second),current->third);
+                objectData.recordType='T';
+
+                int wordValue = getByteWordValue(getDirectiveValue(current->second),current->third);
                 struct recordEntry entry = recordEntry { addresses->increment,wordValue };
                 objectData.recordEntryCount++;
                 objectData.recordEntries[objectData.recordEntryCount] = entry;
-                objectData.recordByteCount+=stoi(toDec(addresses->increment));
+                objectData.recordByteCount = objectData.recordByteCount+addresses->increment;
                 //writeToLstFile(lstFile,addresses->current,current,wordValue);
             }
         }
+        else if(isOpcode(current->second)){
+            if(MAX_RECORD_BYTE_COUNT-0x3<objectData.recordByteCount){
+                //Dump and Start new Record.
+                writeToObjFile(objFile,objectData);
+                resetObjectFileData(&objectData,addresses);
+            }
+            int value = getOpcodeValue(current->second)*OPCODE_MULTIPLIER;
+            if(current->second!="RSUB"){
+                if(current->third.find(",X")!=std::string::npos){
+                    value+=X_MULTIPLER;
+                    string trimmed = current->third;
+                    trimmed.erase(trimmed.size()-2,2);
+                    int response = getSymbolAddress(symbolTable,trimmed);
+                    value+=response;
+                }
+                else {
+                    int response = getSymbolAddress(symbolTable,current->third);
+                    if(response==-1){
+                        displayError(UNDEFINED_SYMBOL,current->third,lineNumber);
+                        exit(1);
+                    }
+                    value+=response;
+                }
+            }
+
+            struct recordEntry record = recordEntry { 3,value };
+            objectData.recordEntryCount++;
+            objectData.recordByteCount+=3;
+            objectData.recordEntries[objectData.recordEntryCount]=record;
+            //writeToLstFile()
+            addresses->increment = 0x3;
+        }
+        addresses->current+=addresses->increment;
 
 
         //Requirement so we don't leak memory.
         delete(current);
     }
 }
-  */
 
 int main(int argc, char* argv[]) {
 
     if(argc<2) { displayError(MISSING_COMMAND_LINE_ARGUMENTS,std::string("Missing Args"),-1); exit(1); }
     address addresses = { 0x0, 0x0, 0x0 };
 
-
-
     auto* symbolTable = (symbol*) calloc(sizeof(struct symbol),100);
 
     performPass1(symbolTable,argv[1],&addresses);
 
-    //performPass2(symbolTable,argv[1],&addresses);
+    performPass2(symbolTable,argv[1],&addresses);
 }
