@@ -52,7 +52,7 @@ void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
                 lineToWrite << "H";
                 lineToWrite << setw(6) << std::left << fileData.programName;
                 lineToWrite << setw(6) << std::right << setfill('0') << std::hex << fileData.startAddress;
-                lineToWrite << setw(6) << std::right << setfill('0') << std::hex << fileData.programSize;
+                lineToWrite << std::hex << fileData.programSize;
                 std::cout << std::resetiosflags(std::ios::showbase);
                 break;
             }
@@ -61,6 +61,11 @@ void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
                 lineToWrite << setw(6) <<  std::right << setfill('0') << std::hex << fileData.recordAddress;
                 lineToWrite << setw(6) << std::left<< setfill('0') << std::hex << fileData.recordByteCount;
                 std::cout << std::resetiosflags(std::ios::showbase);
+                for(int i=0;i<fileData.recordEntryCount;i++){
+                    lineToWrite << std::hex << std::setw(6) << std::left << fileData.recordEntries[i].value;
+                }
+
+
                 break;
             }
             case 'E':{
@@ -241,9 +246,9 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
 
                 int wordValue = getByteWordValue(getDirectiveValue(current->second),current->third);
                 struct recordEntry entry = recordEntry { addresses->increment,wordValue };
-                objectData.recordEntryCount++;
                 objectData.recordEntries[objectData.recordEntryCount] = entry;
                 objectData.recordByteCount = objectData.recordByteCount+addresses->increment;
+                objectData.recordEntryCount++;
                 //writeToLstFile(lstFile,addresses->current,current,wordValue);
             }
         }
@@ -274,9 +279,9 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
             }
 
             struct recordEntry record = recordEntry { 3,value };
+            objectData.recordEntries[objectData.recordEntryCount]=record;
             objectData.recordEntryCount++;
             objectData.recordByteCount+=3;
-            objectData.recordEntries[objectData.recordEntryCount]=record;
             //writeToLstFile()
             addresses->increment = 0x3;
         }
