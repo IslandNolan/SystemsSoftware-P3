@@ -5,6 +5,7 @@
 #include <sstream>
 #include <fstream>
 #include <algorithm>
+#include <iosfwd>
 
 #define NAME_SIZE 7
 #define BLANK_INSTRUCTION 0x000000

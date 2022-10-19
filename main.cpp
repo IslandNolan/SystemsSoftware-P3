@@ -1,7 +1,6 @@
 #include "headers.h"
 
 #define SYMBOL_TABLE_SIZE 100
-#define SEGMENT_SIZE 10
 
 using namespace std;
 
@@ -54,32 +53,30 @@ void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
                 lineToWrite << setw(6) << std::left << fileData.programName;
                 lineToWrite << setw(6) << std::right << setfill('0') << std::hex << fileData.startAddress;
                 lineToWrite << setw(6) << std::right << setfill('0') << std::hex << fileData.programSize;
-                oss << lineToWrite.str() << std::endl;
                 std::cout << std::resetiosflags(std::ios::showbase);
                 break;
             }
             case 'T':{
                 lineToWrite << "T";
                 lineToWrite << setw(6) <<  std::right << setfill('0') << std::hex << fileData.recordAddress;
-                lineToWrite << setw(6) << std::right<< setfill('0') << std::hex << fileData.recordByteCount;
-                oss << lineToWrite.str() << std::endl;
+                lineToWrite << setw(6) << std::left<< setfill('0') << std::hex << fileData.recordByteCount;
                 std::cout << std::resetiosflags(std::ios::showbase);
                 break;
             }
             case 'E':{
                 lineToWrite << "E";
                 lineToWrite << setw(6) << setfill('0') << std::right  << std::hex << fileData.startAddress << std::endl;
-                oss << lineToWrite.str() << endl;
                 std::cout << std::resetiosflags(std::ios::showbase);
                 break;
             }
-            case 'M':{
+            case 'M': {
                 //reserved for extra credit modification record.
                 break;
             }
         }
-    //Pass 2
-
+        string recordUpper = lineToWrite.str();
+        std::transform(recordUpper.begin(),recordUpper.end(),recordUpper.begin(),::toupper);
+        oss << recordUpper << std::endl;
 }
 
 void resetObjectFileData(objectFileData* ofd,address* addresses){
@@ -227,7 +224,6 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
                     writeToObjFile(objFile,objectData);
                     resetObjectFileData(&objectData,addresses);
                 }
-                objectData.recordType='T';
                 //writeToLstFile()
                 addresses->increment = getMemoryAmount(getDirectiveValue(current->second),current->third);
                 objectData.recordAddress+=addresses->increment;
@@ -252,7 +248,8 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
             }
         }
         else if(isOpcode(current->second)){
-            if(MAX_RECORD_BYTE_COUNT-0x3<objectData.recordByteCount){
+            objectData.recordType='T';
+            if(MAX_RECORD_BYTE_COUNT-3<objectData.recordByteCount){
                 //Dump and Start new Record.
                 writeToObjFile(objFile,objectData);
                 resetObjectFileData(&objectData,addresses);

@@ -1,5 +1,3 @@
-#include <algorithm>
-#include <iosfwd>
 #include "headers.h"
 
 #define SYMBOL_TABLE_SIZE 100
