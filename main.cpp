@@ -9,6 +9,8 @@ using namespace std;
  * Splits, and Prepares Segments for the SIC Instruction from a standard String object.
  * Note: Ignores any tokens after the 3rd.
  *
+ * Patched on 10/21/2022.
+ *
  * @param statement String to process, expects 3 words.
  * @return a pointer to a typedef struct segment.
  */
@@ -29,8 +31,10 @@ segment* prepareSegments(std::string statement) {
                     temp->second=current;
                     break;
                 case 2:
-                    temp->third=current;
-                    break;
+                    if(current!=temp->second){
+                        temp->third=current;
+                        break;
+                    } else break;
                 default: break;
             }
         }
@@ -95,7 +99,10 @@ void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
                 break;
             }
             case 'M': {
-                //reserved for extra credit modification record.
+                for(int i=0;i<fileData.modificationCount-1;i++){
+                    lineToWrite << "M" << setw(6) << std::right << std::setfill('0') << std::hex <<  fileData.modificationEntries[i]+0x01;
+                    lineToWrite << "04" << "+" << fileData.programName << ((i!=fileData.modificationCount-2) ? "\n" : "");
+                }
                 break;
             }
         }
@@ -155,8 +162,9 @@ void performPass1(struct symbol symbolTable[], std::string filename, address* ad
         }
         else if(isDirective(current->second)) {
             if(isStartDirective(current->second)){
-                addresses->start = std::strtoull(("0x"+current->third).c_str(),nullptr,16);
-                addresses->current = std::strtoull(("0x"+current->third).c_str(),nullptr,16);
+                addresses->start = 0x00;
+                //addresses->start = std::strtoull(("0x"+current->third).c_str(),nullptr,16);
+                addresses->current = addresses->start;
                 continue;
             }
             else {
@@ -181,10 +189,10 @@ void performPass1(struct symbol symbolTable[], std::string filename, address* ad
         delete(current);
     }
     ifs.close();
-
+    displaySymbolTable(symbolTable);
     /*
     std::cout << std::endl;
-    displaySymbolTable(symbolTable);
+
     std::cout << "\n\nAssembly Summary - "+filename+"\n----------------\n"
               << setw(20) << "Starting Address: " << std::hex << addresses->start << std::dec << endl
               << setw(20) << " Ending Address:  "<< std::hex << addresses->current << std::dec << endl
@@ -220,6 +228,13 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
             exit(1);
         }
         segment *current = prepareSegments(currentLine);
+
+        //Extra Credit Here.
+        if(getSymbolAddress(symbolTable,(current->third.find(",X")==std::string::npos) ? current->third : current->third.substr(0,current->third.size()-2))!=-1){
+            objectData.modificationEntries[objectData.modificationCount] = addresses->current;
+            objectData.modificationCount++;
+        }
+
         if(isDirective(current->second)){
             if(isStartDirective(current->second)){
                 //Everything here is stored as a string hex.
@@ -236,6 +251,10 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
                 if(objectData.recordByteCount>0) {
                     writeToObjFile(objFile,objectData);
                     resetObjectFileData(&objectData,addresses);
+                }
+                if(objectData.modificationCount>0){
+                    objectData.recordType='M';
+                    writeToObjFile(objFile,objectData);
                 }
                 objectData.recordType='E';
                 writeToObjFile(objFile,objectData);
