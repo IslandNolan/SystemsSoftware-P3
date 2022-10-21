@@ -20,7 +20,6 @@ opcode opcodes[OPCODE_ARRAY_SIZE] = {
 int getOpcodeValue(std::string opcode) {
     for(int i=0;i<OPCODE_ARRAY_SIZE;i++){
         if(opcodes[i].name==opcode){
-            //FUCKING ANNOYING FIX
             return opcodes[i].value;
         }
     }

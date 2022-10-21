@@ -52,20 +52,18 @@ void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
                 lineToWrite << "H";
                 lineToWrite << setw(6) << std::left << fileData.programName;
                 lineToWrite << setw(6) << std::right << setfill('0') << std::hex << fileData.startAddress;
-                lineToWrite << std::hex << fileData.programSize;
+                lineToWrite << setw(6) << std::hex << fileData.programSize;
                 std::cout << std::resetiosflags(std::ios::showbase);
                 break;
             }
             case 'T':{
                 lineToWrite << "T";
                 lineToWrite << setw(6) <<  std::right << setfill('0') << std::hex << fileData.recordAddress;
-                lineToWrite << setw(6) << std::left<< setfill('0') << std::hex << fileData.recordByteCount;
+                lineToWrite << setw(2) <<  std::right << setfill('0') << std::hex << fileData.recordByteCount;
                 std::cout << std::resetiosflags(std::ios::showbase);
                 for(int i=0;i<fileData.recordEntryCount;i++){
-                    lineToWrite << std::hex << std::setw(6) << std::left << fileData.recordEntries[i].value;
+                    lineToWrite << std::hex << std::setw(fileData.recordEntries[i].numBytes==1 ? 2 : 6) << std::right << fileData.recordEntries[i].value;
                 }
-
-
                 break;
             }
             case 'E':{
