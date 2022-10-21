@@ -38,11 +38,34 @@ segment* prepareSegments(std::string statement) {
     return temp;
 }
 
-void writeToLstFile(std::ofstream& file, const std::string& address, segment* segments, string opcode) {
-
-
-
-    //Pass 2
+void writeToLstFile(std::ofstream& oss, int address, segment* segments, int opcode) {
+    std::stringstream lineToWrite;
+    if(isDirective(segments->second)){
+        if(isStartDirective(segments->second) || isEndDirective(segments->second) || isReserveDirective(segments->second)){
+            lineToWrite << std::left << setw(8) << std::hex << address;
+            lineToWrite << std::left << setw(8) << segments->first;
+            lineToWrite << std::left << setw(8) << segments->second;
+            lineToWrite << std::left << segments->third;
+        }
+        else if(segments->second=="BYTE" || segments->second=="WORD"){
+            lineToWrite << std::left << setw(8) << std::hex << address;
+            lineToWrite << std::left << setw(8) << segments->first;
+            lineToWrite << std::left << setw(8) << segments->second;
+            lineToWrite << std::left << setw(12) << segments->third;
+            lineToWrite << std::right << setfill('0') << std::hex << setw((segments->third.find("X'")!=std::string::npos) ? 2 : 6) << opcode;
+        }
+    }
+    else if(isOpcode(segments->second)){
+        lineToWrite << std::left << setw(8) << std::hex << address;
+        lineToWrite << std::left << setw(8) << segments->first;
+        lineToWrite << std::left << setw(8) << segments->second;
+        lineToWrite << std::left << setw(12) << segments->third;
+        lineToWrite << std::right << setfill('0') << std::hex << setw((segments->third.find("X'")!=std::string::npos) ? 2 : 6) << opcode;
+    }
+    string res = lineToWrite.str();
+    std::transform(res.begin(),res.end(),res.begin(),::toupper);
+    oss << res << std::endl;
+    std::cout << res << std::endl;
 }
 
 void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
@@ -86,7 +109,6 @@ void resetObjectFileData(objectFileData* ofd,address* addresses){
     ofd->recordAddress = addresses->current;
     ofd->recordEntryCount=0;
     ofd->recordByteCount=0;
-    cout << "RESET OBJ" << std::endl;
 }
 
 std::string createFile(const std::string& filename,const std::string& ext){
@@ -115,7 +137,6 @@ std::string createFile(const std::string& filename,const std::string& ext){
  * @param addresses Current Addresses for the instruction
  */
 void performPass1(struct symbol symbolTable[], std::string filename, address* addresses) {
-    cout << "\nSymbol Table Log\n----------------" << std::endl;
     std::ifstream ifs(filename);
     if(!ifs.is_open()) { displayError(FILE_NOT_FOUND,filename); exit(1); }
     std::string currentLine;
@@ -160,16 +181,16 @@ void performPass1(struct symbol symbolTable[], std::string filename, address* ad
         addresses->current = newValue;
         delete(current);
     }
-    std::cout << std::endl;
-    displaySymbolTable(symbolTable);
-
     ifs.close();
 
+    /*
+    std::cout << std::endl;
+    displaySymbolTable(symbolTable);
     std::cout << "\n\nAssembly Summary - "+filename+"\n----------------\n"
               << setw(20) << "Starting Address: " << std::hex << addresses->start << std::dec << endl
               << setw(20) << " Ending Address:  "<< std::hex << addresses->current << std::dec << endl
               << setw(20) << " Size (bytes):  " << addresses->current-addresses->start << std::resetiosflags(std::ios::showbase) << std::endl;
-
+    */
 }
 
 /**
@@ -180,7 +201,6 @@ void performPass1(struct symbol symbolTable[], std::string filename, address* ad
  */
 void performPass2(struct symbol symbolTable[],const std::string& filename,address* addresses){
 
-    std::cout << "Begin Pass 2--" << std::endl;
     objectFileData objectData = { 0, { 0x0 }, "", 0, 0x0, 0, {  }, 0, ' ', 0x0 };
 
     //Create both .lst, and .obj files.
@@ -211,7 +231,7 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
                 objectData.programSize = addresses->current-addresses->start;
                 addresses->current = addresses->start;
                 writeToObjFile(objFile,objectData);
-                //writeToLstFile(lstFile,objectData);
+                writeToLstFile(lstFile,addresses->current,current,BLANK_INSTRUCTION);
             }
             else if(isEndDirective(current->second)){
                 if(objectData.recordByteCount>0) {
@@ -220,14 +240,14 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
                 }
                 objectData.recordType='E';
                 writeToObjFile(objFile,objectData);
-                //writeToLstFile()
+                writeToLstFile(lstFile,addresses->current,current,BLANK_INSTRUCTION);
             }
             else if(isReserveDirective(current->second)){
                 if(objectData.recordByteCount>0){
                     writeToObjFile(objFile,objectData);
                     resetObjectFileData(&objectData,addresses);
                 }
-                //writeToLstFile()
+                writeToLstFile(lstFile,addresses->current,current,BLANK_INSTRUCTION);
                 addresses->increment = getMemoryAmount(getDirectiveValue(current->second),current->third);
                 objectData.recordAddress+=addresses->increment;
 
@@ -247,7 +267,7 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
                 objectData.recordEntries[objectData.recordEntryCount] = entry;
                 objectData.recordByteCount = objectData.recordByteCount+addresses->increment;
                 objectData.recordEntryCount++;
-                //writeToLstFile(lstFile,addresses->current,current,wordValue);
+                writeToLstFile(lstFile,addresses->current,current,wordValue);
             }
         }
         else if(isOpcode(current->second)){
@@ -280,7 +300,7 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
             objectData.recordEntries[objectData.recordEntryCount]=record;
             objectData.recordEntryCount++;
             objectData.recordByteCount+=3;
-            //writeToLstFile()
+            writeToLstFile(lstFile,addresses->current,current,value);
             addresses->increment = 0x3;
         }
         addresses->current+=addresses->increment;

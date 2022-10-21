@@ -66,7 +66,7 @@ void insertSymbol(struct symbol symbolTable[], const std::string& symbolName, in
         }
         symbolTable[instructionHash].next = newSymbol;
     }
-    std::cout << std::left << std::setw(30) << "Inserted Symbol '"+symbolName+"'" << "Index: " << stoi(std::to_string(instructionHash),nullptr,10) << std::resetiosflags(std::ios::showbase) << std::endl;
+    //std::cout << std::left << std::setw(30) << "Inserted Symbol '"+symbolName+"'" << "Index: " << stoi(std::to_string(instructionHash),nullptr,10) << std::resetiosflags(std::ios::showbase) << std::endl;
 }
 int getSymbolAddress(struct symbol symbolArray[], std::string str){
     symbol s = symbolArray[computeHash(str)];
