@@ -44,7 +44,7 @@ void displayError(int errorType,std::string errorInfo,int line) {
             break;
         }
         case UNDEFINED_SYMBOL:{
-            std::cout << "Symbol '"+errorInfo+"' is is undefined" << std::endl;
+            std::cout << "Symbol '"+errorInfo+"' is Undefined" << std::endl;
             break;
         }
         default: break;

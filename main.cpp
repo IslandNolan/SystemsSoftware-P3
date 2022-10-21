@@ -65,7 +65,6 @@ void writeToLstFile(std::ofstream& oss, int address, segment* segments, int opco
     string res = lineToWrite.str();
     std::transform(res.begin(),res.end(),res.begin(),::toupper);
     oss << res << std::endl;
-    std::cout << res << std::endl;
 }
 
 void writeToObjFile(std::ofstream& oss, objectFileData fileData) {

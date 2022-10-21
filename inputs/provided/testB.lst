@@ -1,0 +1,9 @@
+1000    COPY    START   1000
+1000    FIRST   STL     RETADR      141033
+1003    CLOOP   JSUB    RDREC       482039
+1006            LDA     LENGTH      001036
+1009            COMP    ZERO        281030
+100C            JEQ     ENDFIL      301015
+100F            JSUB    WRREC       482061
+1012            J       CLOOP       3C1003
+1015    ENDFIL  LDA     EOF         00102A
