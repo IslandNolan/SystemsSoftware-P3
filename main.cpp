@@ -99,9 +99,9 @@ void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
                 break;
             }
             case 'M': {
-                for(int i=0;i<fileData.modificationCount-1;i++){
+                for(int i=0;i<fileData.modificationCount;i++){
                     lineToWrite << "M" << setw(6) << std::right << std::setfill('0') << std::hex <<  fileData.modificationEntries[i]+0x01;
-                    lineToWrite << "04" << "+" << fileData.programName << ((i!=fileData.modificationCount-2) ? "\n" : "");
+                    lineToWrite << "04" << "+" << fileData.programName << ((i!=fileData.modificationCount-1) ? "\n" : "");
                 }
                 break;
             }
@@ -230,7 +230,7 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
         segment *current = prepareSegments(currentLine);
 
         //Extra Credit Here.
-        if(getSymbolAddress(symbolTable,(current->third.find(",X")==std::string::npos) ? current->third : current->third.substr(0,current->third.size()-2))!=-1){
+        if(getSymbolAddress(symbolTable,(current->third.find(",X")==std::string::npos) ? current->third : current->third.substr(0,current->third.size()-2))!=-1 && !isEndDirective(current->second)){
             objectData.modificationEntries[objectData.modificationCount] = addresses->current;
             objectData.modificationCount++;
         }
