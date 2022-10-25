@@ -8,6 +8,7 @@
 #include <iosfwd>
 
 #define NAME_SIZE 7
+#define SYMBOL_TABLE_SIZE 100
 #define BLANK_INSTRUCTION 0x000000
 #define OPCODE_MULTIPLIER 0x10000
 #define OUTPUT_BUF_SIZE 70

@@ -1,10 +1,17 @@
 #include "headers.h"
 
+/** Enumeration for the Directives that exist within SIC */
 enum directives {
     ERROR, BYTE, END, RESB, RESW, START, WORD
 };
 std::string directiveArray[7] = {"ERROR","BYTE","END","RESB","RESW","START","WORD"};
 
+/**
+ * Compute the Value of a word based on it's directive type.
+ * @param directiveType
+ * @param str
+ * @return A Hex value represented as an Integer
+ */
 int getByteWordValue(int directiveType, std::string str){
     if(directiveType==BYTE){
         if(str.find('C')!=std::string::npos){
@@ -28,6 +35,12 @@ int getByteWordValue(int directiveType, std::string str){
     return 0;
 }
 
+/**
+ * Find the memory amount for a particular directive.
+ * @param directiveType
+ * @param str
+ * @return A Decimal value represented by an Integer (base 10)
+ */
 int getMemoryAmount(int directiveType, std::string str) {
     //Return as int value formatted as a hex.
     switch(directiveType){
@@ -71,6 +84,11 @@ bool isDirective(std::string str) {
     return getDirectiveValue(str)!=-1;
 }
 
+/**
+ * Find the directive value based on a string.
+ * @param str
+ * @return Position/Enumeration Ordinal if found, else -1.
+ */
 int getDirectiveValue(std::string str){
     for(int i=0;i<7;i++){
         if(directiveArray[i] == str){
@@ -83,12 +101,8 @@ int getDirectiveValue(std::string str){
 bool isStartDirective(std::string str) {
     return (getDirectiveValue(str)==START);
 }
-bool isDataDirective(std::string str){
-    return (getDirectiveValue(str)==BYTE || getDirectiveValue(str)==WORD);
-}
 bool isEndDirective(std::string str){
     return getDirectiveValue(str)==END;
-
 }
 bool isReserveDirective(std::string str){
     return (getDirectiveValue(str)==RESB || getDirectiveValue(str)==RESW);

@@ -1,7 +1,5 @@
 #include "headers.h"
 
-#define SYMBOL_TABLE_SIZE 100
-
 using namespace std;
 
 /**
@@ -42,6 +40,13 @@ segment* prepareSegments(std::string statement) {
     return temp;
 }
 
+/**
+ * Build + Generate an LST File for the loaded SIC Assembled Program.
+ * @param oss Output File Stream, which points to the LST File (.LST).
+ * @param address Current Address of the OPCODE
+ * @param segments  Tab Separated Values from the Line read
+ * @param opcode OPCODE value for the instruction to write.
+ */
 void writeToLstFile(std::ofstream& oss, int address, segment* segments, int opcode) {
     std::stringstream lineToWrite;
     if(isDirective(segments->second)){
@@ -71,6 +76,11 @@ void writeToLstFile(std::ofstream& oss, int address, segment* segments, int opco
     oss << res << std::endl;
 }
 
+/**
+ * Generate and Build an Object File given the loaded SIC Program.
+ * @param oss Output File Stream for the Object File (.OBJ)
+ * @param fileData Data for the current state of the SIC Program (Current address, record count, etc.. )
+ */
 void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
         stringstream lineToWrite;
         switch(fileData.recordType){
@@ -111,12 +121,24 @@ void writeToObjFile(std::ofstream& oss, objectFileData fileData) {
         oss << recordUpper << std::endl;
 }
 
+/**
+ * Reset the passed ObjectFileData.
+ * @param ofd
+ * @param addresses
+ */
 void resetObjectFileData(objectFileData* ofd,address* addresses){
     ofd->recordAddress = addresses->current;
     ofd->recordEntryCount=0;
     ofd->recordByteCount=0;
 }
 
+/**
+ * Create, or Overwrite the File specified with the name specified.
+ * This is a destructive operation, and any file presented will be deleted if it already exists.
+ * @param filename Base SIC Instruction File. Expects a SIC File (.SIC)
+ * @param ext Extension to use in place of .SIC
+ * @return The modified file name to be used with the new of-stream for lst, and obj generation.
+ */
 std::string createFile(const std::string& filename,const std::string& ext){
     string modified = filename;
     modified.erase(filename.size()-4,4);
@@ -189,7 +211,7 @@ void performPass1(struct symbol symbolTable[], std::string filename, address* ad
         delete(current);
     }
     ifs.close();
-    displaySymbolTable(symbolTable);
+    //displaySymbolTable(symbolTable);
     /*
     std::cout << std::endl;
 
@@ -202,9 +224,9 @@ void performPass1(struct symbol symbolTable[], std::string filename, address* ad
 
 /**
  * Perform the SIC Assmenly Pass 2 on the specified file, generates two additional files, filename.lst, and filename.obj
- * @param symbolTable
- * @param filename
- * @param addresses
+ * @param symbolTable Table Computed by Pass-1.
+ * @param filename The SIC File the re-process, (The same as the filename passed into performPass1()
+ * @param addresses Addresses to use for obj and lst file generation.
  */
 void performPass2(struct symbol symbolTable[],const std::string& filename,address* addresses){
 
@@ -329,6 +351,7 @@ void performPass2(struct symbol symbolTable[],const std::string& filename,addres
     }
 }
 
+/** Driver for the Compilation of SIC File */
 int main(int argc, char* argv[]) {
 
     if(argc<2) { displayError(MISSING_COMMAND_LINE_ARGUMENTS,std::string("Missing Args"),-1); exit(1); }

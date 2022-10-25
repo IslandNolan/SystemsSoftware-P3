@@ -1,9 +1,20 @@
 #include "headers.h"
 
+/**
+ * Overflow of displayError without a Line #, or where one cannot be used.
+ * @param errorType
+ * @param errorInfo
+ */
 void displayError(int errorType,std::string errorInfo){
     displayError(errorType,errorInfo,-1);
     exit(1);
 }
+/**
+ * Display the appropriate error in the proper format where applicable.
+ * @param errorType Type of error as specified by the errors Enum.
+ * @param errorInfo Relevant information to the passed error (Byte count, symbol name, etc.. )
+ * @param line Line Number that the error occurred in the file.
+ */
 void displayError(int errorType,std::string errorInfo,int line) {
     std::cout << std::setw(25) << std::left << "\n\nError (Line: "+std::to_string(line)+")";
     switch(errorType){
